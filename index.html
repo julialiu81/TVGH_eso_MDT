@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>臺北榮總食道癌多專科診療指引 (2025修訂版)</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#f0f4f8', 100: '#d9e2ec', 500: '#334e68', 700: '#243b53', 900: '#102a43' },
+            accent: { 500: '#1992d4', 600: '#127fbf' }
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'slide-in': 'slideIn 0.3s ease-out forwards',
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            slideIn: { '0%': { transform: 'translateX(100%)' }, '100%': { transform: 'translateX(0)' } }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-font-smoothing: antialiased; background-color: #f8fafc; }
+    .drawer-scroll::-webkit-scrollbar { width: 6px; }
+    .drawer-scroll::-webkit-scrollbar-track { background: transparent; }
+    .drawer-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .drawer-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .glass-header { background: rgba(16, 42, 67, 0.95); backdrop-filter: blur(8px); }
+    .breadcrumb-scroll::-webkit-scrollbar { height: 4px; }
+    .breadcrumb-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+    details summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+    details summary:hover { color: #1992d4; }
+    details[open] summary { color: #243b53; border-bottom: 1px solid #e2e8f0; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // === FOOTNOTES ===
+    const FOOTNOTES = {
+      "note1": "Mucosal defects affecting ≧3/4 of the esophageal circumference following ER, a preventive measures against stenosis should be considered.",
+      "note2": "T1b-SM1 should be managed similarly to T1a-MM, when these cannot be differentiated from each other.",
+      "note_er_ref": "※ 內視鏡切除 (EMR/ESD) 之詳細操作請參閱內視鏡黏膜下剝離術/內視鏡黏膜切除術指引。",
+      "note_high_risk": "High risk factors: advanced T/N stage (T3-4 or N+), close circumferential margin, LVI, perineural invasion, extracapsular lymph node",
+      "note_feeding": "Consider enteric feeding tube (NG, NJ, gastrostomy or jejunostomy) for preoperative nutritional support",
+      "note_response_workup": "評估檢查項目：PET/CT、Chest/abdominal CT、Upper GI endoscopy (optional if surgery is planned)",
+      "note_surgery_timing": "手術一般在術前化放療完成後 6-8 週進行",
+      "scc_a": "JCOG1109 NExT (Lancet 2024;404:55-66)：新輔助 DCF vs CF vs CRT，DCF 組 OS 顯著優於 CF (HR 0.68)，且有優於 CRT 的趨勢。",
+      "adeno_a": "ESOPEC Trial：FLOT vs CROSS，FLOT 組 OS 顯著優於 CROSS (Median OS: 66 mo vs 37 mo)。Neo-AEGIS Trial：Peri-op Chemo vs Preop CCRT，3yr OS 55% vs 57% (HR 1.03, 無顯著差異)；pCR: CROSS 較佳 (16% vs 5%)。",
+      "stent_ab": "食道癌相關胸主動脈支架之適應症及使用規範（自111年7月1日起修訂）：\n1. 影像學檢查發現食道癌併主動脈侵犯，橫切面影像發現腫瘤接觸超過主動脈圓周的四分之一。\n2. 且在主動脈周邊(paraaortic area)有腫瘤壞死、膿瘍或氣體堆積，造成主動脈有破裂之虞時。",
+      "nivo_adj": "CheckMate 577 (NEJM 2021;384:1191-1203)：Nivolumab adjuvant 於接受術前 CCRT 後手術之食道/GEJ 癌，DFS 顯著優於 placebo (median DFS 22.4 vs 11.0 mo)。",
+      "adeno_er_note": "If a diagnostic ER performed: pTis, pT1a, superficial pT1b, pT1b, N0 tumor classifications are defined by pathology of the diagnostic ER specimen."
+    };
+
+    // === DECISION_TREE ===
+    const DECISION_TREE = {
+      // ============ ROOT ============
+      root: {
+        question: "請選擇癌細胞種類 (Cell Type)",
+        options: [
+          { label: "鱗狀細胞癌 (Squamous cell carcinoma)", next: "scc_stage" },
+          { label: "腺癌 (Adenocarcinoma)", next: "adeno_stage" }
+        ]
+      },
+
+      // ============ SCC — INITIAL STAGING ============
+      scc_stage: {
+        question: "臨床分期與腫瘤狀態 (Clinical Stage)",
+        options: [
+          { label: "cT1a-EP/LPM", next: "scc_t1a_ep" },
+          { label: "cT1a-MM", next: "scc_t1a_mm" },
+          { label: "cT1b", next: "scc_t1b" },
+          { label: "cT1b-cT2, N0 (低風險：<3cm, 良好分化)", next: "res_scc_t1bc2_n0_low" },
+          { label: "cT2, N0 (高風險：LVI, ≥3cm, 低分化) 或 cT1b-cT2, N+ 或 cT3-cT4a, 任何N", next: "res_scc_adv_resectable" },
+          { label: "cT4b (侵犯心臟、大血管、氣管等)", next: "res_scc_ct4b" },
+          { label: "無法切除之局部晚期、局部復發或遠端轉移", next: "scc_unresectable" }
+        ]
+      },
+      scc_t1a_ep: {
+        question: "病灶圓周範圍 (Circumference)",
+        options: [
+          { label: "非全周性 (Non-circumferential)", next: "res_scc_t1a_ep_non_circ" },
+          { label: "全周性 (Whole-circumferential)", next: "scc_t1a_ep_len" }
+        ]
+      },
+      scc_t1a_ep_len: {
+        question: "病灶長度 (Tumor Length)",
+        options: [
+          { label: "≦ 5cm", next: "res_scc_t1a_ep_circ_short" },
+          { label: "> 5cm", next: "res_scc_t1a_ep_circ_long" }
+        ]
+      },
+      scc_t1a_mm: {
+        question: "病灶圓周範圍 (Circumference)",
+        options: [
+          { label: "非全周性 (Non-circumferential)", next: "res_scc_t1a_mm_non_circ" },
+          { label: "全周性 (Whole-circumferential)", next: "scc_t1a_mm_surg" }
+        ]
+      },
+      scc_t1a_mm_surg: {
+        question: "患者是否可承受手術 (Fitness for surgery)",
+        options: [
+          { label: "可承受手術", next: "res_scc_t1a_mm_circ_surg" },
+          { label: "無法承受手術", next: "res_scc_t1a_mm_circ_no_surg" }
+        ]
+      },
+      scc_t1b: {
+        question: "患者是否可承受手術 (Fitness for surgery)",
+        options: [
+          { label: "可承受手術", next: "res_scc_t1b_surg" },
+          { label: "無法承受手術", next: "res_scc_t1b_no_surg" }
+        ]
+      },
+      scc_unresectable: {
+        question: "病人體能狀況 (Performance Status)",
+        options: [
+          { label: "KPS < 60% 或 ECOG ≥ 3", next: "res_scc_poor_ps" },
+          { label: "KPS ≥ 60% 或 ECOG ≤ 2", next: "res_scc_good_ps" }
+        ]
+      },
+
+      // ============ SCC — EARLY STAGE RESULTS ============
+      res_scc_t1a_ep_non_circ: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "EMR / ESD",
+        notes: ["note1", "note_er_ref"],
+        nextSteps: [{ label: "內視鏡切除後 → 病理評估", next: "scc_post_er" }]
+      },
+      res_scc_t1a_ep_circ_short: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "ESD",
+        notes: ["note1", "note_er_ref"],
+        nextSteps: [{ label: "內視鏡切除後 → 病理評估", next: "scc_post_er" }]
+      },
+      res_scc_t1a_ep_circ_long: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "手術切除 (Surgery)\n或 同步化放療 (Chemoradiotherapy)\n或 放射治療 (Radiotherapy)",
+        notes: ["note1"],
+        nextSteps: [
+          { label: "手術後 → 手術結果評估", next: "scc_surgical_type" },
+          { label: "化放療後 → 反應評估", next: "scc_response_def" }
+        ]
+      },
+      res_scc_t1a_mm_non_circ: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "EMR / ESD",
+        notes: ["note1", "note2", "note_er_ref"],
+        nextSteps: [{ label: "內視鏡切除後 → 病理評估", next: "scc_post_er" }]
+      },
+      res_scc_t1a_mm_circ_surg: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "手術切除 (Surgery)\n或 同步化放療 (Chemoradiotherapy)\n或 放射治療 (Radiotherapy)",
+        notes: ["note1", "note2"],
+        nextSteps: [
+          { label: "手術後 → 手術結果評估", next: "scc_surgical_type" },
+          { label: "化放療後 → 反應評估", next: "scc_response_def" }
+        ]
+      },
+      res_scc_t1a_mm_circ_no_surg: {
+        isResult: true, type: "warning", title: "建議治療方式",
+        content: "同步化放療 (Chemoradiotherapy)\n或 放射治療 (Radiotherapy)",
+        notes: ["note1", "note2"],
+        nextSteps: [{ label: "化放療後 → 反應評估", next: "scc_response_def" }]
+      },
+      res_scc_t1b_surg: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "手術切除 (Surgery)\n或 同步化放療 (Chemoradiotherapy)\n或 放射治療 (Radiotherapy)",
+        notes: ["note2"],
+        nextSteps: [
+          { label: "手術後 → 手術結果評估", next: "scc_surgical_type" },
+          { label: "化放療後 → 反應評估", next: "scc_response_def" }
+        ]
+      },
+      res_scc_t1b_no_surg: {
+        isResult: true, type: "warning", title: "建議治療方式",
+        content: "同步化放療 (Chemoradiotherapy)\n或 放射治療 (Radiotherapy)",
+        notes: ["note2"],
+        nextSteps: [{ label: "化放療後 → 反應評估", next: "scc_response_def" }]
+      },
+
+      // ============ SCC — ADVANCED RESULTS ============
+      res_scc_t1bc2_n0_low: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "食道切除術 (Esophagectomy) — 適用於非頸部食道",
+        nextSteps: [{ label: "手術後 → 手術結果評估 (未接受術前化放療)", next: "scc_surgical_no_prior" }]
+      },
+      res_scc_adv_resectable: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "術前化療 (Preoperative chemotherapy, DCF)\n或 術前同步化放療 (Preoperative chemoradiation, RT 41.4-50.4 Gy + 併用化療)\n或 根除性同步化放療 (Definitive chemoradiation, RT 50.4-60 Gy + 併用化療)",
+        notes: ["scc_a", "note_feeding"],
+        nextSteps: [
+          { label: "術前化療/化放療後 → 反應評估", next: "scc_response_preop" },
+          { label: "根除性化放療後 → 反應評估", next: "scc_response_def" }
+        ]
+      },
+      res_scc_ct4b: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "根除性同步化放療 (Definitive chemoradiation, RT 50.4-60 Gy + 併用化療)",
+        extra: "若侵犯氣管、大血管、椎體或心臟，可考慮新輔助化學治療接續根除性化放療，或單獨使用化學治療。若需置放 TAA Stent 請參閱下方規範。",
+        notes: ["stent_ab"],
+        nextSteps: [{ label: "化放療後 → 反應評估", next: "scc_response_def" }]
+      },
+      res_scc_poor_ps: {
+        isResult: true, type: "danger", title: "建議治療方式",
+        content: "緩和治療 / 最佳支持性照護 (Palliative / Best supportive care)"
+      },
+      res_scc_good_ps: {
+        isResult: true, type: "warning", title: "建議治療方式",
+        content: "全身性治療 (Systemic therapy) 及/或 緩和治療/最佳支持性照護 (Palliative/Best supportive care)"
+      },
+
+      // ============ SCC — POST-ER PATHOLOGICAL EVALUATION ============
+      scc_post_er: {
+        question: "內視鏡切除後病理評估結果 (Post-ER Pathological Evaluation)",
+        options: [
+          { label: "pT1a-EP/LPM, 無血管侵犯 (Negative for vascular invasion)", next: "res_scc_post_er_follow" },
+          { label: "pT1a-MM, 無血管侵犯", next: "res_scc_post_er_eval" },
+          { label: "pT1a-M, 有血管侵犯 (Positive for vascular invasion)", next: "res_scc_post_er_eval" },
+          { label: "pT1b-SM", next: "res_scc_post_er_t1b" }
+        ]
+      },
+      res_scc_post_er_follow: {
+        isResult: true, type: "primary", title: "後續處置",
+        content: "追蹤觀察 (Follow-up)"
+      },
+      res_scc_post_er_eval: {
+        isResult: true, type: "warning", title: "後續處置",
+        content: "綜合判斷是否需要追加治療\n(Comprehensively determine whether additional treatment is required or not)"
+      },
+      res_scc_post_er_t1b: {
+        isResult: true, type: "warning", title: "後續處置",
+        content: "食道切除術 (Esophagectomy)\n或 同步化放療 (Chemoradiotherapy)",
+        nextSteps: [{ label: "手術後 → 手術結果評估", next: "scc_surgical_type" }]
+      },
+
+      // ============ SCC — RESPONSE ASSESSMENT ============
+      scc_response_preop: {
+        question: "術前化療/化放療後反應評估 (Response Assessment after Preop treatment)",
+        extra: "評估項目：PET/CT、Chest/abdominal CT、Upper GI endoscopy (optional if surgery is planned)",
+        options: [
+          { label: "無疾病證據 (No evidence of disease)", next: "res_scc_resp_preop_ned" },
+          { label: "持續局部疾病 (Persistent local disease)", next: "res_scc_resp_preop_local" },
+          { label: "無法切除或轉移 (Unresectable or Metastatic disease)", next: "res_scc_resp_preop_met" }
+        ]
+      },
+      res_scc_resp_preop_ned: {
+        isResult: true, type: "primary", title: "評估後處置",
+        content: "食道切除術 (Esophagectomy)\n或 追蹤觀察 (Surveillance)",
+        notes: ["note_surgery_timing"],
+        nextSteps: [{ label: "手術後 → 手術結果評估 (已接受術前化放療)", next: "scc_surgical_prior" }]
+      },
+      res_scc_resp_preop_local: {
+        isResult: true, type: "warning", title: "評估後處置",
+        content: "食道切除術 (Esophagectomy)\n或 緩和處置 (Palliative Management)",
+        nextSteps: [{ label: "手術後 → 手術結果評估 (已接受術前化放療)", next: "scc_surgical_prior" }]
+      },
+      res_scc_resp_preop_met: {
+        isResult: true, type: "danger", title: "評估後處置",
+        content: "緩和處置 (Palliative Management)"
+      },
+
+      scc_response_def: {
+        question: "根除性化放療後反應評估 (Response Assessment after Definitive CRT)",
+        extra: "評估項目：PET/CT、Chest/abdominal CT、Upper GI endoscopy",
+        options: [
+          { label: "無疾病證據 (No evidence of disease)", next: "res_scc_resp_def_ned" },
+          { label: "持續局部疾病 (Persistent local disease)", next: "res_scc_resp_def_local" },
+          { label: "無法切除或轉移 (Unresectable or Metastatic disease)", next: "res_scc_resp_def_met" }
+        ]
+      },
+      res_scc_resp_def_ned: {
+        isResult: true, type: "primary", title: "評估後處置",
+        content: "追蹤觀察 (Surveillance)",
+        nextSteps: [{ label: "若日後復發 → 復發處置", next: "scc_recurrence" }]
+      },
+      res_scc_resp_def_local: {
+        isResult: true, type: "warning", title: "評估後處置",
+        content: "食道切除術 (Esophagectomy)\n或 緩和處置 (Palliative Management)",
+        nextSteps: [{ label: "手術後 → 手術結果評估 (已接受化放療)", next: "scc_surgical_prior" }]
+      },
+      res_scc_resp_def_met: {
+        isResult: true, type: "danger", title: "評估後處置",
+        content: "緩和處置 (Palliative Management)"
+      },
+
+      // ============ SCC — SURGICAL OUTCOMES ============
+      scc_surgical_type: {
+        question: "患者是否曾接受術前化放療？",
+        options: [
+          { label: "未接受術前化放療 (No prior chemoradiation)", next: "scc_surgical_no_prior" },
+          { label: "已接受術前化放療 (Prior chemoradiation)", next: "scc_surgical_prior" }
+        ]
+      },
+      scc_surgical_no_prior: {
+        question: "手術結果 — 未接受術前化放療 (Surgical Outcomes - No prior CRT)",
+        options: [
+          { label: "完全切除 (R0 resection)", next: "res_scc_surg_np_r0" },
+          { label: "顯微鏡下殘留 (R1 resection)", next: "res_scc_surg_np_r1" },
+          { label: "肉眼殘留 (R2 resection)", next: "res_scc_surg_np_r2" }
+        ]
+      },
+      res_scc_surg_np_r0: {
+        isResult: true, type: "primary", title: "R0 術後處置",
+        content: "追蹤觀察 (Surveillance)\n或 同步化放療 (Chemoradiation) — 若有高風險因子",
+        notes: ["note_high_risk"],
+        nextSteps: [{ label: "若日後復發 → 復發處置", next: "scc_recurrence" }]
+      },
+      res_scc_surg_np_r1: {
+        isResult: true, type: "warning", title: "R1 術後處置",
+        content: "同步化放療 (Chemoradiation)"
+      },
+      res_scc_surg_np_r2: {
+        isResult: true, type: "danger", title: "R2 術後處置",
+        content: "同步化放療 (Chemoradiation)\n或 緩和處置 (Palliative Management)"
+      },
+
+      scc_surgical_prior: {
+        question: "手術結果 — 已接受術前化放療 (Surgical Outcomes - Prior CRT)",
+        options: [
+          { label: "R0, ypT0N0 (病理完全反應)", next: "res_scc_surg_p_pcr" },
+          { label: "R0, ypT positive 或/及 N positive (殘留病灶)", next: "res_scc_surg_p_residual" },
+          { label: "顯微鏡下殘留 (R1 resection)", next: "res_scc_surg_p_r1" },
+          { label: "肉眼殘留 (R2 resection)", next: "res_scc_surg_p_r2" }
+        ]
+      },
+      res_scc_surg_p_pcr: {
+        isResult: true, type: "primary", title: "R0 ypT0N0 術後處置",
+        content: "追蹤觀察 (Surveillance)",
+        nextSteps: [{ label: "若日後復發 → 復發處置", next: "scc_recurrence" }]
+      },
+      res_scc_surg_p_residual: {
+        isResult: true, type: "warning", title: "R0 ypT+/N+ 術後處置",
+        content: "輔助 Nivolumab (Adjuvant Nivolumab, 首選)\n或 輔助治療 (Adjuvant chemoradiation or chemotherapy)\n或 追蹤觀察 (Surveillance)",
+        notes: ["nivo_adj"]
+      },
+      res_scc_surg_p_r1: {
+        isResult: true, type: "warning", title: "R1 術後處置",
+        content: "輔助治療 (Adjuvant treatment)\n或 追蹤觀察 (Surveillance)"
+      },
+      res_scc_surg_p_r2: {
+        isResult: true, type: "danger", title: "R2 術後處置",
+        content: "觀察至疾病進展 (Observation until progression)\n或 緩和處置 (Palliative Management)"
+      },
+
+      // ============ SCC — RECURRENCE ============
+      scc_recurrence: {
+        question: "復發類型 (Type of Recurrence)",
+        options: [
+          { label: "局部復發：曾手術，未曾化放療", next: "res_scc_recur_surg_only" },
+          { label: "局部復發：曾化放療，未曾手術", next: "scc_recur_ccrt_only" },
+          { label: "遠端轉移 (Metastatic disease)", next: "res_scc_recur_met" }
+        ]
+      },
+      res_scc_recur_surg_only: {
+        isResult: true, type: "warning", title: "局部復發處置 (曾手術)",
+        content: "同步化放療 (Concurrent chemoradiation)\n或 手術 (Surgery)\n或 化學治療 (Chemotherapy)\n或 緩和治療/最佳支持性照護"
+      },
+      scc_recur_ccrt_only: {
+        question: "腫瘤是否可切除？",
+        options: [
+          { label: "可切除且適合手術 (Resectable and medically operable)", next: "res_scc_recur_resectable" },
+          { label: "不可切除或不適合手術 (Unresectable or medically inoperable)", next: "res_scc_recur_unresect" }
+        ]
+      },
+      res_scc_recur_resectable: {
+        isResult: true, type: "primary", title: "局部復發處置 (曾化放療，可切除)",
+        content: "食道切除術 (Esophagectomy)"
+      },
+      res_scc_recur_unresect: {
+        isResult: true, type: "danger", title: "局部復發處置 (曾化放療，不可切除)",
+        content: "緩和處置 (Palliative Management)"
+      },
+      res_scc_recur_met: {
+        isResult: true, type: "danger", title: "遠端轉移處置",
+        content: "緩和處置 (Palliative Management)"
+      },
+
+      // ============ ADENOCARCINOMA — INITIAL STAGING ============
+      adeno_stage: {
+        question: "臨床分期與腫瘤狀態 (Clinical Stage)",
+        options: [
+          { label: "pTis 或 pT1a", next: "res_adeno_ptis_t1a" },
+          { label: "pT1b, N0", next: "adeno_pt1b" },
+          { label: "cT1b-cT2, N0 (低風險：<3cm, 良好分化)", next: "res_adeno_t1bc2_low" },
+          { label: "cT2, N0 (高風險：LVI, ≥3cm, 低分化) 或 cT1b-cT2, N+ 或 cT3-cT4a, 任何N", next: "res_adeno_adv" },
+          { label: "cT4b (侵犯心臟、大血管、氣管等)", next: "res_adeno_ct4b" },
+          { label: "無法切除之局部晚期、局部復發或遠端轉移", next: "adeno_unresectable" }
+        ]
+      },
+      adeno_pt1b: {
+        question: "腫瘤深度評估",
+        options: [
+          { label: "表淺性 (Superficial)", next: "res_adeno_pt1b_sup" },
+          { label: "非表淺性 (Non-superficial)", next: "res_adeno_pt1b_non_sup" }
+        ]
+      },
+      adeno_unresectable: {
+        question: "病人體能狀況 (Performance Status)",
+        options: [
+          { label: "KPS < 60% 或 ECOG ≥ 3", next: "res_adeno_poor_ps" },
+          { label: "KPS ≥ 60% 或 ECOG ≤ 2", next: "res_adeno_good_ps" }
+        ]
+      },
+
+      // ============ ADENOCARCINOMA — RESULTS ============
+      res_adeno_ptis_t1a: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "優先考慮內視鏡治療 (Endoscopic therapies: ER, Ablation, 或 ER 後接續 ablation)\n或 食道切除術 (Esophagectomy)",
+        extra: "內視鏡治療後進行內視鏡追蹤 (Endoscopic surveillance)",
+        notes: ["adeno_er_note"],
+        nextSteps: [{ label: "手術後 → 手術結果評估", next: "adeno_surgical_type" }]
+      },
+      res_adeno_pt1b_sup: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "ER ± ablation\n或 食道切除術 (Esophagectomy)",
+        extra: "內視鏡治療後進行內視鏡追蹤 (Endoscopic surveillance)",
+        notes: ["adeno_er_note"],
+        nextSteps: [{ label: "手術後 → 手術結果評估", next: "adeno_surgical_type" }]
+      },
+      res_adeno_pt1b_non_sup: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "食道切除術 (Esophagectomy)",
+        nextSteps: [{ label: "手術後 → 手術結果評估", next: "adeno_surgical_type" }]
+      },
+      res_adeno_t1bc2_low: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "食道切除術 (Esophagectomy)",
+        nextSteps: [{ label: "手術後 → 手術結果評估 (未接受術前治療)", next: "adeno_surgical_no_prior" }]
+      },
+      res_adeno_adv: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "圍手術期化療接續食道切除術 (Perioperative chemotherapy then esophagectomy, 首選)\n或 術前同步化放療 (Preoperative chemoradiation, RT 41.4-50.4 Gy + 併用化療)\n或 考慮新輔助/圍手術期免疫檢查點抑制劑 (若 MSI-H/dMMR)\n或 根除性同步化放療 (Definitive chemoradiation, 針對拒絕手術者)",
+        notes: ["adeno_a", "note_feeding"],
+        nextSteps: [
+          { label: "術前治療後 → 反應評估", next: "adeno_response_preop" },
+          { label: "根除性化放療後 → 反應評估", next: "adeno_response_def" }
+        ]
+      },
+      res_adeno_ct4b: {
+        isResult: true, type: "primary", title: "建議治療方式",
+        content: "根除性同步化放療 (Definitive chemoradiation, RT 50.4-60 Gy + 併用化療)",
+        extra: "若侵犯氣管、大血管、椎體或心臟，可考慮單獨使用化學治療。若需置放 TAA Stent 請參閱下方規範。",
+        notes: ["stent_ab"]
+      },
+      res_adeno_poor_ps: {
+        isResult: true, type: "danger", title: "建議治療方式",
+        content: "緩和治療 / 最佳支持性照護 (Palliative / Best supportive care)"
+      },
+      res_adeno_good_ps: {
+        isResult: true, type: "warning", title: "建議治療方式",
+        content: "全身性治療 (Systemic therapy) 及/或 緩和治療/最佳支持性照護",
+        extra: "若懷疑有轉移：進行 microsatellite、PD-L1 及 HER2 測試（若未完成），可考慮 NGS 檢測。",
+        nextSteps: [{ label: "依 Biomarker 結果選擇全身性治療", next: "adeno_biomarker" }]
+      },
+
+      // ============ ADENOCARCINOMA — BIOMARKER-DIRECTED THERAPY ============
+      adeno_biomarker: {
+        question: "Biomarker 檢測結果 (Biomarker Testing Results)",
+        extra: "建議檢測：PD-L1 (CPS)、HER2 (IHC/FISH)、MSI/dMMR。可考慮 NGS 檢測。",
+        options: [
+          { label: "PD-L1 CPS \u2265 5", next: "res_adeno_met_pdl1_high" },
+          { label: "PD-L1 CPS 1-4", next: "res_adeno_met_pdl1_low" },
+          { label: "HER2 陽性 (IHC 3+ 或 FISH+)", next: "res_adeno_met_her2" },
+          { label: "MSI-H / dMMR", next: "res_adeno_met_msi" }
+        ]
+      },
+      res_adeno_met_pdl1_high: {
+        isResult: true, type: "primary", title: "PD-L1 CPS \u2265 5 — 建議 1st Line",
+        content: "Nivolumab + XELOX 或 FOLFOX (首選)\n或 Pembrolizumab + PFL (KEYNOTE-590)\n或 Nivolumab + Ipilimumab (Nivo 3mg/kg Q2W + Ipi 1mg/kg Q6W)",
+        extra: "替代方案：High-dose PFL、XELOX、DCF、Modified TCF、Irinotecan-based、FOLFIRI"
+      },
+      res_adeno_met_pdl1_low: {
+        isResult: true, type: "primary", title: "PD-L1 CPS 1-4 — 建議 1st Line",
+        content: "Pembrolizumab + Fluoropyrimidine/Platinum-based chemo (KEYNOTE-859)\n或 化學治療 (High-dose PFL 或 XELOX)",
+        extra: "替代方案：DCF、Modified TCF、Irinotecan-based、FOLFIRI"
+      },
+      res_adeno_met_her2: {
+        isResult: true, type: "primary", title: "HER2(+) — 建議 1st Line",
+        content: "Trastuzumab + 標準化療 \u00b1 Pembrolizumab (KEYNOTE-811 / ToGA)",
+        extra: "2nd line 可考慮 Fam-trastuzumab deruxtecan (T-DXd) 6.4mg/kg Q3W"
+      },
+      res_adeno_met_msi: {
+        isResult: true, type: "primary", title: "MSI-H / dMMR — 建議治療",
+        content: "免疫檢查點抑制劑 (Immune checkpoint inhibitor)\nNivolumab 或 Pembrolizumab",
+        extra: "可考慮新輔助/圍手術期免疫治療 (若腫瘤尚可切除)"
+      },
+
+      // ============ ADENOCARCINOMA — RESPONSE ASSESSMENT ============
+      adeno_response_preop: {
+        question: "術前治療後反應評估 (Response Assessment after Preop treatment)",
+        extra: "評估項目：PET/CT、Chest/abdominal CT、Upper GI endoscopy (optional if surgery is planned)",
+        options: [
+          { label: "無疾病證據 (No evidence of disease)", next: "res_adeno_resp_preop_ned" },
+          { label: "持續局部疾病 (Persistent local disease)", next: "res_adeno_resp_preop_local" },
+          { label: "無法切除或新發轉移 (Unresectable or New Metastatic disease)", next: "res_adeno_resp_preop_met" }
+        ]
+      },
+      res_adeno_resp_preop_ned: {
+        isResult: true, type: "primary", title: "評估後處置",
+        content: "食道切除術 (Esophagectomy, 首選)\n或 追蹤觀察 (Surveillance)",
+        notes: ["note_surgery_timing"],
+        nextSteps: [{ label: "手術後 → 手術結果評估 (已接受術前治療)", next: "adeno_surgical_prior" }]
+      },
+      res_adeno_resp_preop_local: {
+        isResult: true, type: "warning", title: "評估後處置",
+        content: "食道切除術 (Esophagectomy, 首選)\n或 緩和處置 (Palliative Management)",
+        nextSteps: [{ label: "手術後 → 手術結果評估 (已接受術前治療)", next: "adeno_surgical_prior" }]
+      },
+      res_adeno_resp_preop_met: {
+        isResult: true, type: "danger", title: "評估後處置",
+        content: "緩和處置 (Palliative Management)"
+      },
+
+      adeno_response_def: {
+        question: "根除性化放療後反應評估 (Response Assessment after Definitive CRT)",
+        extra: "評估項目：PET/CT、Chest/abdominal CT、Upper GI endoscopy",
+        options: [
+          { label: "無疾病證據 (No evidence of disease)", next: "res_adeno_resp_def_ned" },
+          { label: "持續局部疾病 (Persistent local disease)", next: "res_adeno_resp_def_local" },
+          { label: "新發轉移 (New Metastatic disease)", next: "res_adeno_resp_def_met" }
+        ]
+      },
+      res_adeno_resp_def_ned: {
+        isResult: true, type: "primary", title: "評估後處置",
+        content: "追蹤觀察 (Surveillance)",
+        nextSteps: [{ label: "若日後復發 → 復發處置", next: "adeno_recurrence" }]
+      },
+      res_adeno_resp_def_local: {
+        isResult: true, type: "warning", title: "評估後處置",
+        content: "食道切除術 (Esophagectomy, 首選)\n或 緩和處置 (Palliative Management)",
+        nextSteps: [{ label: "手術後 → 手術結果評估 (已接受化放療)", next: "adeno_surgical_prior" }]
+      },
+      res_adeno_resp_def_met: {
+        isResult: true, type: "danger", title: "評估後處置",
+        content: "緩和處置 (Palliative Management)"
+      },
+
+      // ============ ADENOCARCINOMA — SURGICAL OUTCOMES ============
+      adeno_surgical_type: {
+        question: "患者是否曾接受術前化放療或全身治療？",
+        options: [
+          { label: "未接受 (No prior chemoradiation/systemic therapy)", next: "adeno_surgical_no_prior" },
+          { label: "已接受 (Prior chemoradiation/systemic therapy)", next: "adeno_surgical_prior" }
+        ]
+      },
+      adeno_surgical_no_prior: {
+        question: "手術結果 — 未接受術前治療 (Surgical Outcomes - No prior treatment)",
+        options: [
+          { label: "完全切除 (R0 resection)", next: "adeno_surg_np_r0" },
+          { label: "顯微鏡下殘留 (R1 resection)", next: "res_adeno_surg_np_r1" },
+          { label: "肉眼殘留 (R2 resection)", next: "res_adeno_surg_np_r2" }
+        ]
+      },
+      adeno_surg_np_r0: {
+        question: "R0 切除 — 淋巴結與 T 分期狀態",
+        options: [
+          { label: "Node negative, pTis 或 pT1", next: "res_adeno_surg_np_r0_t1" },
+          { label: "Node negative, pT2", next: "res_adeno_surg_np_r0_t2" },
+          { label: "Node negative, pT3 或 pT4a", next: "res_adeno_surg_np_r0_t3" },
+          { label: "Node positive (any T)", next: "res_adeno_surg_np_r0_npos" }
+        ]
+      },
+      res_adeno_surg_np_r0_t1: {
+        isResult: true, type: "primary", title: "R0 Node(-) pTis/pT1 術後處置",
+        content: "追蹤觀察 (Surveillance)\n或 考慮同步化放療 (Consider chemoradiation for select patients)",
+        nextSteps: [{ label: "若日後復發 → 復發處置", next: "adeno_recurrence" }]
+      },
+      res_adeno_surg_np_r0_t2: {
+        isResult: true, type: "primary", title: "R0 Node(-) pT2 術後處置",
+        content: "追蹤觀察 (Surveillance)",
+        nextSteps: [{ label: "若日後復發 → 復發處置", next: "adeno_recurrence" }]
+      },
+      res_adeno_surg_np_r0_t3: {
+        isResult: true, type: "warning", title: "R0 Node(-) pT3/pT4a 術後處置",
+        content: "追蹤觀察 (Surveillance)\n或 同步化放療 (Chemoradiation)\n或 化學治療 (Chemotherapy)"
+      },
+      res_adeno_surg_np_r0_npos: {
+        isResult: true, type: "warning", title: "R0 Node(+) 術後處置",
+        content: "追蹤觀察 (Surveillance)\n或 同步化放療 (Chemoradiation)\n或 化學治療 (Chemotherapy)"
+      },
+      res_adeno_surg_np_r1: {
+        isResult: true, type: "warning", title: "R1 術後處置",
+        content: "同步化放療 (Chemoradiation)"
+      },
+      res_adeno_surg_np_r2: {
+        isResult: true, type: "danger", title: "R2 術後處置",
+        content: "同步化放療 (Chemoradiation)\n或 緩和處置 (Palliative Management)"
+      },
+
+      adeno_surgical_prior: {
+        question: "手術結果 — 已接受術前化放療/全身治療 (Surgical Outcomes - Prior treatment)",
+        options: [
+          { label: "R0, ypT0N0 (病理完全反應)", next: "res_adeno_surg_p_pcr" },
+          { label: "R0, ypT positive 或/及 N positive (殘留病灶)", next: "res_adeno_surg_p_residual" },
+          { label: "顯微鏡下殘留 (R1 resection)", next: "res_adeno_surg_p_r1" },
+          { label: "肉眼殘留 (R2 resection)", next: "res_adeno_surg_p_r2" }
+        ]
+      },
+      res_adeno_surg_p_pcr: {
+        isResult: true, type: "primary", title: "R0 ypT0N0 術後處置",
+        content: "全身性治療 (Systemic therapy) — 若曾接受圍手術期治療\n或 Nivolumab — 若曾接受術前化放療\n或 同步化放療 (Chemoradiation)\n或 觀察至疾病進展 (Observation)",
+        notes: ["nivo_adj"],
+        nextSteps: [{ label: "若日後復發 → 復發處置", next: "adeno_recurrence" }]
+      },
+      res_adeno_surg_p_residual: {
+        isResult: true, type: "warning", title: "R0 ypT+/N+ 術後處置",
+        content: "全身性治療 (Systemic therapy) — 若曾接受圍手術期治療\n或 Nivolumab — 若曾接受術前治療\n或 同步化放療 (Chemoradiation)\n或 觀察至疾病進展",
+        notes: ["nivo_adj"]
+      },
+      res_adeno_surg_p_r1: {
+        isResult: true, type: "danger", title: "R1 術後處置",
+        content: "同步化放療 (Chemoradiation) — 僅限術前未接受 RT\n或 觀察至疾病進展\n或 考慮再切除 (Consider re-resection)"
+      },
+      res_adeno_surg_p_r2: {
+        isResult: true, type: "danger", title: "R2 術後處置",
+        content: "同步化放療 (Chemoradiation) — 僅限術前未接受 RT\n或 緩和處置 (Palliative Management)"
+      },
+
+      // ============ ADENOCARCINOMA — RECURRENCE ============
+      adeno_recurrence: {
+        question: "復發類型 (Type of Recurrence)",
+        options: [
+          { label: "局部復發：曾手術，未曾化放療", next: "res_adeno_recur_surg_only" },
+          { label: "局部復發：曾化放療，未曾手術", next: "adeno_recur_ccrt_only" },
+          { label: "遠端轉移 (Metastatic disease)", next: "res_adeno_recur_met" }
+        ]
+      },
+      res_adeno_recur_surg_only: {
+        isResult: true, type: "warning", title: "局部復發處置 (曾手術)",
+        content: "同步化放療 (Concurrent chemoradiation, preferred)\n或 手術 (Surgery)\n或 全身性治療 (Systemic therapy)\n或 緩和治療/最佳支持性照護"
+      },
+      adeno_recur_ccrt_only: {
+        question: "腫瘤是否可切除？",
+        options: [
+          { label: "可切除且適合手術 (Resectable and medically operable)", next: "res_adeno_recur_resectable" },
+          { label: "不可切除或不適合手術", next: "res_adeno_recur_unresect" }
+        ]
+      },
+      res_adeno_recur_resectable: {
+        isResult: true, type: "primary", title: "局部復發處置 (曾化放療，可切除)",
+        content: "食道切除術 (Esophagectomy)"
+      },
+      res_adeno_recur_unresect: {
+        isResult: true, type: "danger", title: "局部復發處置 (曾化放療，不可切除)",
+        content: "緩和處置 (Palliative Management)"
+      },
+      res_adeno_recur_met: {
+        isResult: true, type: "danger", title: "遠端轉移處置",
+        content: "緩和處置 (Palliative Management)"
+      }
+    };
+
+    // === REF_DATA ===
+    const REF_PANELS = [
+      { key: 'WORKUP', label: '術前檢查' },
+      { key: 'TNM', label: 'TNM 分期' },
+      { key: 'PATHOLOGY', label: '病理原則' },
+      { key: 'SURGERY', label: '外科原則' },
+      { key: 'CHEMO', label: '化學治療' },
+      { key: 'RADIO', label: '放射治療' },
+      { key: 'PARTICLE', label: '粒子治療' },
+      { key: 'FOLLOWUP', label: '追蹤原則' },
+      { key: 'TRIALS', label: '關鍵臨床試驗' },
+      { key: 'TEAM', label: '團隊組成' }
+    ];
+
+    const REF_DATA = {
+      TEAM: {
+        title: "團隊組成 (MDT Panel Members)",
+        content: `
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2">核心科別</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li><strong>胸腔外科：</strong> 徐博奎(召集人)、黃建勝(副召集人)、許瀚水、洪榮志、簡宏哲、李怡穎、許文虎、謝致政、劉佳、丁英哲</li>
+            <li><strong>腸胃科：</strong> 侯明志、王彥博、陳宥任、吳佩珊</li>
+            <li><strong>腫瘤內科：</strong> 楊慕華、顏厥全、陳明晃、洪逸平、姜乃榕、陳天華、吳紋綺、唐振育</li>
+            <li><strong>放射腫瘤：</strong> 黃品逸、賴姿妤、林佑蓉</li>
+            <li><strong>放射診斷部：</strong> 陳俊谷、張瀛月、翁敬堯、李瑩綺、邱睿涵、許益瑞、劉松鈞</li>
+            <li><strong>核醫部：</strong> 林可瀚、丁建鑫</li>
+            <li><strong>病理部：</strong> 葉奕成</li>
+            <li><strong>個案管理：</strong> 簡伶怡</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">其他科別</h4>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li><strong>心臟外科：</strong> 陳沂名</li>
+            <li><strong>安寧照護：</strong> 賴志冠、楊琪</li>
+            <li><strong>藥劑部：</strong> 陳俊豪</li>
+            <li><strong>社工室：</strong> 程雅芬</li>
+            <li><strong>營養部：</strong> 祝梓芸</li>
+          </ul>
+        `
+      },
+      WORKUP: {
+        title: "術前檢查 (Pretreatment Workup)",
+        content: `
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2">常規與影像學評估</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-2">
+            <li><strong>基本評估：</strong> H&P, CBC and Chemistry profile.</li>
+            <li><strong>內視鏡與切片：</strong> Upper GI endoscopy and biopsy. (EMR is essential for accurate staging of early stage cancers T1a or T1b).</li>
+            <li><strong>影像學檢查：</strong> Chest / Abdominal CT with IV contrast.</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">進階分期檢查 (若無遠端轉移證據)</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-2">
+            <li><strong>PET-CT evaluation</strong></li>
+            <li><strong>Endoscopic ultrasound (EUS)</strong></li>
+            <li><strong>Bronchoscopy：</strong>若腫瘤位於氣管隆突(carina)或之上。</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">其他評估項目</h4>
+          <ul class="list-disc pl-5 text-sm space-y-2">
+            <li><strong>轉移性病灶：</strong> Biopsy as clinically indicated. 轉移性腺癌需 HER2-neu testing。</li>
+            <li><strong>營養與戒菸：</strong> Nutritional assessment, Smoking cessation.</li>
+            <li><strong>Siewert 分類：</strong> Assign Siewert category (adenocarcinomas involving EGJ).</li>
+            <li><strong>營養支持：</strong> Consider enteric feeding tube (NG, NJ, gastrostomy or jejunostomy).</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">分期後分流</h4>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>Stage I-III (locoregional) → 依細胞類型分流</li>
+            <li>Stage IV (metastatic) → 全身性治療/緩和治療</li>
+            <li>Stage I-IVA → Multidisciplinary evaluation → Fit for surgery / Non-surgical candidate</li>
+          </ul>
+        `
+      },
+      TNM: {
+        title: "TNM 分期 (AJCC 8th Ed.)",
+        content: `
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2">Primary Tumor (T)</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li><strong>Tis:</strong> High-grade dysplasia</li>
+            <li><strong>T1:</strong> Lamina propria, muscularis mucosae, or submucosa
+              <ul class="list-circle pl-5 mt-1 text-slate-600">
+                <li><strong>T1a:</strong> Lamina propria or muscularis mucosae</li>
+                <li><strong>T1b:</strong> Submucosa</li>
+              </ul>
+            </li>
+            <li><strong>T2:</strong> Muscularis propria</li>
+            <li><strong>T3:</strong> Adventitia</li>
+            <li><strong>T4:</strong> Adjacent structures
+              <ul class="list-circle pl-5 mt-1 text-slate-600">
+                <li><strong>T4a:</strong> Pleura, pericardium, azygos vein, diaphragm, peritoneum</li>
+                <li><strong>T4b:</strong> Aorta, vertebral body, airway</li>
+              </ul>
+            </li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">Regional Lymph Nodes (N)</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li><strong>N0:</strong> No regional LN metastasis</li>
+            <li><strong>N1:</strong> 1-2 regional LN</li>
+            <li><strong>N2:</strong> 3-6 regional LN</li>
+            <li><strong>N3:</strong> 7+ regional LN</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">Distant Metastasis (M)</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li><strong>M0:</strong> No distant metastasis</li>
+            <li><strong>M1:</strong> Distant metastasis</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">Clinical Stage Grouping (簡表)</h4>
+          <table class="w-full text-xs border-collapse mb-4">
+            <tr class="bg-slate-100"><th class="border p-1">Stage</th><th class="border p-1">T</th><th class="border p-1">N</th><th class="border p-1">M</th></tr>
+            <tr><td class="border p-1">0</td><td class="border p-1">Tis</td><td class="border p-1">N0</td><td class="border p-1">M0</td></tr>
+            <tr><td class="border p-1">I</td><td class="border p-1">T1</td><td class="border p-1">N0-1</td><td class="border p-1">M0</td></tr>
+            <tr><td class="border p-1">II</td><td class="border p-1">T2</td><td class="border p-1">N0-1</td><td class="border p-1">M0</td></tr>
+            <tr><td class="border p-1">III</td><td class="border p-1">T3/T1-2</td><td class="border p-1">N0-2/N2</td><td class="border p-1">M0</td></tr>
+            <tr><td class="border p-1">IVA</td><td class="border p-1">T4a-b/Any T</td><td class="border p-1">N0-2/N3</td><td class="border p-1">M0</td></tr>
+            <tr><td class="border p-1">IVB</td><td class="border p-1">Any T</td><td class="border p-1">Any N</td><td class="border p-1">M1</td></tr>
+          </table>
+          <p class="text-xs text-slate-500">* 完整 SCC/Adenocarcinoma 病理分期請參照 AJCC Cancer Staging Manual, 8th Edition。</p>
+        `
+      },
+      PATHOLOGY: {
+        title: "病理原則 (Principles of Pathological Review)",
+        content: `
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2">病理檢查目的</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li>腫瘤分類 (Classification of tumor)</li>
+            <li>侵犯深度 (Determine the extent of invasion)</li>
+            <li>切緣狀態 (Establish status of cancer involvement of surgical margins)</li>
+          </ul>
+          <p class="text-sm mb-4">所有手術病理報告應依照食道癌 <strong>WHO 分類</strong>及 <strong>AJCC/UICC TNM 8th edition</strong> 分期。</p>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">手術病理報告必含項目</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li>組織型態與分化程度 (Histologic type and grade)</li>
+            <li>Microscopic tumor extension (pT stage)</li>
+            <li>Lymph-vascular invasion (LVI), perineural invasion (PNI)</li>
+            <li>Margins: proximal, distal, circumferential, and closest</li>
+            <li>Lymph node status and number of lymph nodes recovered</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">新輔助治療後評估</h4>
+          <p class="text-sm mb-2">接受新輔助治療者須包含對於治療反應的評估：</p>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li><strong>Modified Ryan Scheme for Tumor Regression Score:</strong>
+              <ul class="list-circle pl-5 mt-1 text-slate-600">
+                <li>0 = 完全反應 (Complete response)</li>
+                <li>1 = 接近完全反應 (Near complete response)</li>
+                <li>2 = 部分反應 (Partial response)</li>
+                <li>3 = 不良或無反應 (Poor or no response)</li>
+              </ul>
+            </li>
+            <li>淋巴結治療效果 (Treatment effect in lymph nodes)</li>
+          </ul>
+        `
+      },
+      SURGERY: {
+        title: "外科原則 (Principles of Surgical Resection)",
+        content: `
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2">可切除性標準</h4>
+          <p class="text-sm mb-2"><strong>可切除 (Resectable)：</strong></p>
+          <ul class="list-disc pl-5 mb-3 text-sm space-y-1">
+            <li>T1a: EMR + ablation or esophagectomy</li>
+            <li>T1b or deeper: esophagectomy</li>
+            <li>T1-T3, even with N+ (bulky multi-station LAP 為相對禁忌)</li>
+            <li>T4a: involvement of pericardium, pleura, or diaphragm</li>
+          </ul>
+          <p class="text-sm mb-2"><strong>不可切除 (Unresectable)：</strong></p>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li>cT4b: heart, great vessels, trachea, or adjacent organs</li>
+            <li>Multi-station, bulky lymphadenopathy</li>
+            <li>EGJ and supraclavicular LN involvement</li>
+            <li>Distant metastases (stage IV)</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">頸部食道</h4>
+          <p class="text-sm mb-4">Cervical esophageal carcinomas &lt;5 cm from cricopharyngeus → <strong>Definitive chemoradiation</strong></p>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">Siewert 分類</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li><strong>Type I, II：</strong> 視為食道癌</li>
+            <li><strong>Type III：</strong> 視為胃癌 (may need additional esophageal resection for adequate margins)</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">手術類型考量</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li>考慮腫瘤位置、conduit 選擇、術者經驗與病人偏好</li>
+            <li><strong>Acceptable conduits:</strong> Gastric (preferred), Colon, Jejunum</li>
+            <li>Feeding jejunostomy tube (J-tube) preferred for preoperative nutrition</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">淋巴結清掃</h4>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li><strong>Standard：</strong> Esophagus + nearby tissues, without RLN node dissection</li>
+            <li><strong>Extended (en-bloc)：</strong> Mesoesophagus, thoracic duct, RLN LN dissection</li>
+            <li>未接受化放療：至少 16 nodes (desirable &gt;30)</li>
+            <li>接受化放療後：optimum number unknown, similar resection recommended</li>
+          </ul>
+        `
+      },
+
+      CHEMO: {
+        title: "化學治療原則 (Principles of Chemotherapy)",
+        content: `
+          <details open>
+            <summary class="text-brand-700">Neo/Adjuvant & Definitive CCRT Regimens</summary>
+            <p class="text-sm font-semibold mb-1">Preferred Regimens:</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li><strong>5-FU + Cisplatin + RT</strong> (Regimen 1: 4-day PFL, Q3-4W)
+                <br/><span class="text-xs text-slate-500">CDDP 80mg/m&sup2; D1 + 5-FU 400mg/m&sup2;/d CI D1-4 + LV 90mg/m&sup2;/d CI D1-4</span></li>
+              <li><strong>Paclitaxel + Carboplatin + RT</strong> (Regimen 2: QW)
+                <br/><span class="text-xs text-slate-500">Paclitaxel 50mg/m&sup2; + Carboplatin AUC 2</span></li>
+            </ul>
+            <p class="text-sm font-semibold mb-1">Other Regimens:</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>Regimen 3: CFHx (Hydroxyurea + CDDP 20mg/m&sup2; + 5-FU 600mg/m&sup2; CI, Q3W)</li>
+              <li>Regimen 4: Weekly Cisplatin (35-40mg/m&sup2;, QW x5)</li>
+              <li>Regimen 5: 4-day FL (5-FU + LV, Q3-4W)</li>
+              <li><strong>Regimen 6: DCF (Q3W)</strong> — Docetaxel 60mg/m&sup2; + CDDP 60mg/m&sup2; D1 + 5-FU 600mg/m&sup2; CI D1-5
+                <br/><span class="text-xs text-slate-500">JCOG1109: DCF neoadjuvant 優於 CF (OS), 有優於 CRT 趨勢</span></li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Adjuvant Immunotherapy</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li><strong>Nivolumab:</strong> 240mg Q2W x 16wks, then 480mg Q4W for 1yr
+                <br/><span class="text-xs text-slate-500">CheckMate 577: DFS benefit (NEJM 2021;384:1191)</span></li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Peri-operative Chemotherapy (Adenocarcinoma)</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li><strong>FLOT4:</strong> Docetaxel 50mg/m&sup2; + Oxaliplatin 85mg/m&sup2; + LV 200mg/m&sup2; + 5-FU 2600mg/m&sup2; 24hr CI, Q2W</li>
+              <li>FLOT4 + Durvalumab 1500mg Q4W (MATTERHORN, Phase III)</li>
+              <li>FLOT4 + Atezolizumab 1200mg Q2W (AIO-DANTE, Phase II)</li>
+              <li>FLOT4 + Trastuzumab (8mg→6mg/kg Q3W) + Pembrolizumab 200mg Q3W</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Palliative Chemotherapy — SCC</summary>
+            <p class="text-sm font-semibold mb-1">Preferred (含 ICI):</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li><strong>Regimen 6: Pembrolizumab + PFL</strong> (Q3W)
+                <br/><span class="text-xs text-slate-500">Pembrolizumab 200mg + CDDP 80mg/m&sup2; D1 + 5-FU 800mg/m&sup2;/d CI D1-5 (KEYNOTE-590)</span></li>
+              <li><strong>Regimen 7: Nivolumab + PFL</strong> (Q4W)
+                <br/><span class="text-xs text-slate-500">Nivolumab 240mg Q2W + CDDP 80mg/m&sup2; D1 + 5-FU 800mg/m&sup2;/d CI D1-5 (CheckMate-648)</span></li>
+              <li><strong>Regimen 8: Nivolumab + Ipilimumab</strong>
+                <br/><span class="text-xs text-slate-500">Nivo 3mg/kg Q2W + Ipi 1mg/kg Q6W (CheckMate-648)</span></li>
+            </ul>
+            <p class="text-sm font-semibold mb-1">Other Regimens:</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li><strong>Regimen 1: PFL</strong> (Q3-4W)
+                <br/><span class="text-xs text-slate-500">CDDP 80mg/m&sup2; D1 + 5-FU 400mg/m&sup2;/d CI D1-4 + LV 90mg/m&sup2;/d CI D1-4</span></li>
+              <li><strong>Regimen 2: FL</strong> (Q3-4W)
+                <br/><span class="text-xs text-slate-500">5-FU 400mg/m&sup2;/d CI D1-4 + LV 90mg/m&sup2;/d CI D1-4</span></li>
+              <li><strong>Regimen 3: TPF</strong> (Q3-4W)
+                <br/><span class="text-xs text-slate-500">Docetaxel 60mg/m&sup2; + CDDP 75mg/m&sup2; + 5-FU 850mg/m&sup2; CI 96h</span></li>
+              <li><strong>Regimen 4: Cisplatin + DeGramont</strong> (Q2W)
+                <br/><span class="text-xs text-slate-500">CDDP 50mg/m&sup2; + LV 200mg/m&sup2; x2d + 5-FU 400mg/m&sup2; x2d + 5-FU 600mg/m&sup2; CI 48h</span></li>
+              <li><strong>Regimen 5: Cisplatin + Etoposide</strong> (Neuroendocrine carcinoma)
+                <br/><span class="text-xs text-slate-500">CDDP 75mg/m&sup2; + Etoposide 75mg/m&sup2; x2d</span></li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Palliative Chemotherapy — EAC/EGJ 1st Line</summary>
+            <p class="text-sm font-semibold mb-1">Preferred (PD-L1 CPS &ge; 5):</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>Nivolumab 360mg + XELOX Q3W <span class="text-xs text-slate-500">(ATTRACTION-4)</span></li>
+              <li>Nivolumab 240mg + FOLFOX Q2W <span class="text-xs text-slate-500">(CheckMate-649)</span></li>
+              <li>Fluoropyrimidine/LV + Platinum + ICI
+                <br/><span class="text-xs text-slate-500">Pembrolizumab + PFL (KEYNOTE-590) / Nivolumab + PFL (CheckMate-648)</span></li>
+              <li>Nivolumab + Ipilimumab (Nivo 3mg/kg Q2W + Ipi 1mg/kg Q6W)</li>
+            </ul>
+            <p class="text-sm font-semibold mb-1">If PD-L1 CPS 1-5:</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>Pembrolizumab + FP-based chemo <span class="text-xs text-slate-500">(KEYNOTE-859)</span></li>
+            </ul>
+            <p class="text-sm font-semibold mb-1">Preferred (non-ICI):</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li><strong>High-dose PFL:</strong> CDDP 30mg/m&sup2; + LV 500mg/m&sup2; + 5-FU 2200mg/m&sup2; CI 22h, weekly</li>
+              <li><strong>XELOX:</strong> Oxaliplatin 135mg/m&sup2; D1 + Capecitabine 1000mg/m&sup2; BID D1-14, Q3W</li>
+            </ul>
+            <p class="text-sm font-semibold mb-1">HER2(+):</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>Trastuzumab + standard chemo &plusmn; Pembrolizumab <span class="text-xs text-slate-500">(ToGA / KEYNOTE-811)</span></li>
+            </ul>
+            <p class="text-sm font-semibold mb-1">Alternative Regimens:</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li><strong>DCF:</strong> Docetaxel 75mg/m&sup2; + CDDP 75mg/m&sup2; D1 + 5-FU 750mg/m&sup2; CI D1-5, Q3W</li>
+              <li><strong>Modified TCF:</strong> Paclitaxel 100mg/m&sup2; + CDDP 30mg/m&sup2; D1,8 + UFT 300mg/m&sup2; + LV 90mg/d D1-14, Q3W</li>
+              <li><strong>Irinotecan-based:</strong> Irinotecan 80mg/m&sup2; + LV 500mg/m&sup2; + 5-FU 2000mg/m&sup2; CI 22h, weekly</li>
+              <li><strong>FOLFIRI:</strong> Irinotecan 180mg/m&sup2; + LV 400mg/m&sup2; + 5-FU 400mg/m&sup2; bolus + 2400mg/m&sup2; CI, Q2W</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">EGJ Adenocarcinoma — Adjuvant</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>TS-1 80mg/m&sup2;/day, 4wk on/2wk off, 1 year</li>
+              <li>XELOX: Oxaliplatin 135mg/m&sup2; D1 + Capecitabine 1000mg/m&sup2; BID D1-14, Q3W x 6mo</li>
+              <li>High dose PFL: CDDP 30mg/m&sup2; + LV 500mg/m&sup2; + 5-FU 2200mg/m&sup2; CIVD 22h, weekly x 6mo</li>
+              <li>TS-1 + Docetaxel 40mg/m&sup2;</li>
+              <li>SOX: S1 40mg/m&sup2; BID D1-14 + Oxaliplatin 130mg/m&sup2; Q3W x 8 cycles</li>
+              <li>CT → CCRT → CT (XP/XRT/XP or SOX/SRT/SOX)</li>
+              <li>Nivolumab adjuvant after preop CCRT: 240mg Q2W → 480mg Q4W</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">EGJ Adenocarcinoma — 2nd/3rd Line</summary>
+            <p class="text-sm font-semibold mb-1">2nd Line:</p>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>Ramucirumab 8mg/kg Q2W &plusmn; Paclitaxel</li>
+              <li>Docetaxel 75-100mg/m&sup2; Q3W</li>
+              <li>Paclitaxel 80mg/m&sup2; QW</li>
+              <li>Irinotecan 150-180mg/m&sup2; Q2W</li>
+              <li>Immunotherapy (MSI-H/dMMR or CPS&gt;10): Nivolumab / Pembrolizumab</li>
+              <li>Entrectinib / Larotrectinib (NTRK fusion+)</li>
+              <li>Fam-trastuzumab deruxtecan 6.4mg/kg Q3W (HER2+)</li>
+            </ul>
+            <p class="text-sm font-semibold mb-1">3rd Line:</p>
+            <ul class="list-disc pl-5 text-sm space-y-1">
+              <li>Nivolumab 3mg/kg Q2W / Pembrolizumab (CPS&gt;1)</li>
+              <li>Lonsurf (TAS-102): 35mg/m&sup2; BID D1-5 &amp; D8-12, Q4W</li>
+            </ul>
+          </details>
+        `
+      },
+      RADIO: {
+        title: "放射治療原則 (Principles of Radiotherapy)",
+        content: `
+          <details open>
+            <summary class="text-brand-700">Radiation Dose</summary>
+            <ul class="list-disc pl-5 mb-4 text-sm space-y-2">
+              <li><strong>Preoperative CCRT:</strong> 41.4-50.4 Gy (1.8-2Gy/fx). Surgery at 6-8 weeks after CCRT.</li>
+              <li><strong>Definitive CCRT:</strong> 50.4-60 Gy (1.8-2Gy/fx). Cervical esophagus: up to 59.4-66 Gy.</li>
+              <li><strong>Postoperative CCRT:</strong> 45-50.4 Gy.</li>
+              <li><strong>Optional:</strong> 58.8-63 Gy (2.1-2.25 Gy/fx) in 28 fx to GTV; 50.4Gy to subclinical area.</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Target Volume Delineation</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>GTV:</strong> Primary tumor + involved regional LN. Wall &gt;5mm or asymmetric.</li>
+              <li><strong>CTV_H:</strong> GTV of primary + lymphadenopathy.</li>
+              <li><strong>CTV_M:</strong> 3-4 cm sup/inf expansion; nodal CTV 0.5-1.5 cm expansion.</li>
+              <li><strong>PTV:</strong> 0.5-1 cm expansion (consider respiratory motion).</li>
+            </ul>
+            <p class="text-sm font-semibold mb-1 mt-2">Elective Nodal Regions by Tumor Location:</p>
+            <table class="w-full text-xs border-collapse mb-2">
+              <tr class="bg-slate-100"><th class="border p-1 text-left">Location</th><th class="border p-1 text-left">Elective Nodes</th></tr>
+              <tr><td class="border p-1">Cervical esophagus</td><td class="border p-1">SCF LN, consider higher cervical nodes (esp. N1+)</td></tr>
+              <tr><td class="border p-1">Proximal 1/3 thoracic</td><td class="border p-1">Para-esophageal + SCF LN</td></tr>
+              <tr><td class="border p-1">Middle 1/3</td><td class="border p-1">Para-esophageal LN</td></tr>
+              <tr><td class="border p-1">Distal 1/3 + GEJ</td><td class="border p-1">Para-esophageal, lesser curvature, splenic, celiac axis</td></tr>
+            </table>
+          </details>
+          <details>
+            <summary class="text-brand-700">Preoperative CCRT Candidates</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>cT2N0 (high risk: LVI+, &ge;3cm, poorly differentiated)</li>
+              <li>cT1b-cT2, N+</li>
+              <li>cT3-T4a, Any N</li>
+              <li>Dose: 41.4-50.4 Gy. Evaluate resectability at 4-5 weeks after CCRT.</li>
+              <li>Resectable → Surgery at 6-8 weeks. Unresectable → boost to 59.4-66 Gy (optional).</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Definitive CCRT Candidates</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>Resectable but medically unfit / refuses surgery</li>
+              <li>Unresectable disease (T4b, bulky LAP)</li>
+              <li>Cervical esophageal cancer (&lt;5 cm from cricopharyngeus)</li>
+              <li>Dose: 50.4-60 Gy. Cervical: up to 59.4-66 Gy.</li>
+              <li>T4b: consider endoluminal stenting; chemo alone if trachea/great vessel/heart invasion.</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Postoperative CCRT Candidates</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-1">
+              <li>Positive or close margins (&le;1mm), if not received RT preop</li>
+              <li>Adenocarcinoma with pN+ or pT3-4a, if not received RT preop</li>
+              <li>Optional: SCC with T3/T4 + N+, if not received RT preop</li>
+              <li>Dose: 45-50.4 Gy. Include anastomosis in radiation volume.</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Simulation & Planning</summary>
+            <ul class="list-disc pl-5 text-sm space-y-1">
+              <li>CT simulation, 3D planning. IMRT for OAR dose reduction.</li>
+              <li>Avoid heavy meal 3hr before simulation (proximal stomach lesions).</li>
+              <li>IV contrast when appropriate. Slice thickness &le;5mm.</li>
+              <li>Immobilization device strongly recommended.</li>
+              <li>4D CT for motion management; ITV-based CTV/PTV expansion.</li>
+              <li>Techniques: 3D-CRT, IMRT, VMAT, IGRT.</li>
+            </ul>
+          </details>
+        `
+      },
+      PARTICLE: {
+        title: "粒子治療 (Charged Particle Therapy)",
+        content: `
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2">Proton Therapy (質子治療)</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li>適用於需降低器官風險劑量 (OAR) 而 3D 技術無法達成時</li>
+            <li>Ideally within a clinical trial or registry study</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">Carbon Ion Therapy (碳離子治療)</h4>
+          <p class="text-sm mb-2">Definitive carbon ion therapy 可考慮用於：</p>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>cT1N0M0 esophageal cancer</li>
+            <li>ECOG 0-2</li>
+            <li>No history of previous treatment for esophageal cancer</li>
+          </ul>
+          <p class="text-sm mt-2 text-slate-500">目前僅有 stage I 食道癌的 definitive carbon ion therapy 有限證據支持。</p>
+        `
+      },
+      FOLLOWUP: {
+        title: "追蹤原則 (Follow Up)",
+        content: `
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2">常規追蹤頻率</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-2">
+            <li><strong>History and Physical:</strong><br/>
+            - 第 1-2 年：每 3-6 個月<br/>
+            - 第 3-5 年：每 6-12 個月<br/>
+            - 第 5 年後：每年</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">依臨床需求安排</h4>
+          <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+            <li>Clinical examination</li>
+            <li>Chemistry profile and CBC</li>
+            <li>Imaging</li>
+            <li>Upper GI endoscopy and biopsy</li>
+          </ul>
+          <h4 class="font-bold text-lg text-brand-700 border-b border-brand-100 pb-1 mb-2 mt-4">其他後續照護</h4>
+          <ul class="list-disc pl-5 text-sm space-y-1">
+            <li>Dilatation for anastomotic stenosis</li>
+            <li>Nutritional assessment and counseling</li>
+          </ul>
+        `
+      },
+      TRIALS: {
+        title: "關鍵臨床試驗 (Key Clinical Trials)",
+        content: `
+          <details open>
+            <summary class="text-brand-700">SCC — Neoadjuvant</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>JCOG1109 NExT</strong> (Lancet 2024;404:55-66)<br/>
+              DCF vs CF vs CRT neoadjuvant for locally advanced ESCC. DCF 組 OS 顯著優於 CF (HR 0.68)，有優於 CRT 的趨勢。</li>
+              <li><strong>CROSS</strong> (NEJM 2012;366:2074)<br/>
+              Paclitaxel/Carboplatin + 41.4 Gy preop CCRT vs surgery alone. OS 顯著改善。</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Adenocarcinoma — Perioperative</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>ESOPEC</strong><br/>
+              FLOT vs CROSS for EAC/EGJ. FLOT OS 顯著優於 CROSS (Median OS: 66 vs 37 mo).</li>
+              <li><strong>Neo-AEGIS</strong><br/>
+              Peri-op Chemo (MAGIC/FLOT) vs Preop CCRT (CROSS). 3yr OS 55% vs 57% (HR 1.03, NS); pCR: CROSS 16% vs Chemo 5%.</li>
+              <li><strong>FLOT4-AIO</strong><br/>
+              FLOT vs ECF/ECX perioperative. OS 顯著改善 (median 50 vs 35 mo).</li>
+              <li><strong>MATTERHORN</strong> — FLOT4 + Durvalumab (Phase III, global)</li>
+              <li><strong>AIO-DANTE</strong> — FLOT4 + Atezolizumab (Phase II, Germany)</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Adjuvant Immunotherapy</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>CheckMate 577</strong> (NEJM 2021;384:1191-1203)<br/>
+              Nivolumab adjuvant after preop CCRT + surgery in esophageal/GEJ cancer. DFS: 22.4 vs 11.0 mo (HR 0.69).</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Metastatic — 1st Line Immunotherapy</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>KEYNOTE-590</strong> (Lancet 2021;398:759-771)<br/>
+              Pembrolizumab + chemo vs chemo, 1st line ESCC/EAC. OS/PFS 顯著改善。</li>
+              <li><strong>CheckMate-648</strong> (NEJM 2022;386:449-462)<br/>
+              Nivo + chemo or Nivo + Ipi vs chemo, 1st line ESCC. OS 顯著改善。</li>
+              <li><strong>CheckMate-649</strong><br/>
+              Nivo + chemo vs chemo, 1st line GC/GEJC/EAC. OS/PFS 改善 (PD-L1 CPS&ge;5).</li>
+              <li><strong>KEYNOTE-859</strong> (Lancet Oncol 2023;24:1181-1195)<br/>
+              Pembrolizumab + chemo, HER2-neg GC/GEJC. OS 顯著改善。</li>
+              <li><strong>ATTRACTION-4</strong> (Lancet Oncol 2022;23:234-247)<br/>
+              Nivo + chemo, HER2-neg GC/GEJC. PFS 改善但 OS 未達顯著。</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">HER2-positive</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>ToGA</strong> (Lancet 2010;376:687-97)<br/>
+              Trastuzumab + chemo for HER2+ advanced GC/GEJC. OS 改善。</li>
+              <li><strong>KEYNOTE-811</strong><br/>
+              Pembrolizumab + Trastuzumab + chemo for HER2+ GC/GEJC.</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">Definitive CRT — Landmark Trials</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>RTOG 85-01</strong> (JAMA 1999;281:1623-27)<br/>
+              CRT vs RT alone for locally advanced esophageal cancer. CRT 顯著優於單獨放療，奠定 definitive CRT 標準。</li>
+              <li><strong>RTOG 94-05 / INT 0123</strong><br/>
+              High-dose (64.8 Gy) vs standard-dose (50.4 Gy) RT. 高劑量未改善 OS，標準劑量 50.4 Gy 確立為推薦劑量。</li>
+              <li><strong>FFCD 9102</strong> (JCO 2007;25:1160)<br/>
+              CRT followed by surgery vs CRT alone for ESCC. 加入手術未顯著改善 OS，但改善局部控制。</li>
+            </ul>
+          </details>
+          <details>
+            <summary class="text-brand-700">2nd/3rd Line &amp; Targeted Therapy</summary>
+            <ul class="list-disc pl-5 mb-2 text-sm space-y-2">
+              <li><strong>REGARD</strong> (Lancet 2014;383:31-39)<br/>
+              Ramucirumab monotherapy vs placebo, 2nd line GC/GEJC. OS 顯著改善。</li>
+              <li><strong>RAINBOW</strong> (Lancet Oncol 2014;15:1224-35)<br/>
+              Ramucirumab + Paclitaxel vs placebo + Paclitaxel, 2nd line GC/GEJC. OS 顯著改善。</li>
+              <li><strong>TAGS</strong> (Lancet Oncol 2018;19:1437-48)<br/>
+              Trifluridine/tipiracil (TAS-102) vs placebo, 3rd line+ GC/GEJC. OS 顯著改善。</li>
+            </ul>
+          </details>
+        `
+      }
+    };
+
+    // === SVG ICONS ===
+    const IconStethoscope = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>
+    );
+    const IconChevronLeft = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    );
+    const IconChevronRight = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    );
+    const IconRefresh = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    );
+    const IconInfo = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    );
+    const IconX = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    );
+    const IconClipboardList = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+    );
+    const IconBook = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+    );
+    const IconArrowRight = () => (
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    );
+
+    // === BREADCRUMB ===
+    const Breadcrumb = ({ history, onJump }) => {
+      if (history.length <= 1) return null;
+      return (
+        <div className="bg-white border-b border-slate-200 sticky top-[68px] z-10">
+          <div className="max-w-2xl mx-auto px-4 py-2 flex items-center gap-1 overflow-x-auto breadcrumb-scroll">
+            {history.map((item, idx) => (
+              <React.Fragment key={idx}>
+                {idx > 0 && <span className="text-slate-300 flex-shrink-0"><IconChevronRight /></span>}
+                <button
+                  onClick={() => onJump(idx)}
+                  className={
+                    "text-xs px-2 py-1 rounded-md flex-shrink-0 transition-colors " +
+                    (idx === history.length - 1
+                      ? "bg-brand-700 text-white font-bold"
+                      : "text-slate-500 hover:text-brand-700 hover:bg-brand-50")
+                  }
+                >
+                  {item.label.length > 20 ? item.label.slice(0, 20) + '...' : item.label}
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // === QUESTION VIEW ===
+    const QuestionView = ({ node, onOptionClick }) => {
+      return (
+        <div className="flex flex-col h-full animate-fade-in">
+          <h2 className="text-xl md:text-2xl font-bold text-brand-900 mb-4 border-l-4 border-accent-500 pl-4 py-1">
+            {node.question}
+          </h2>
+          {node.extra && (
+            <p className="text-sm text-slate-600 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6">
+              {node.extra}
+            </p>
+          )}
+          <div className="flex flex-col gap-3 flex-1">
+            {node.options.map((opt, idx) => (
+              <button
+                key={idx}
+                onClick={() => onOptionClick(opt.next, opt.label)}
+                className="text-left w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl hover:bg-brand-50 hover:border-brand-50 hover:shadow-sm transition-all duration-200 font-medium text-slate-800 text-base md:text-lg flex justify-between items-center group"
+              >
+                <span className="pr-4">{opt.label}</span>
+                <span className="text-brand-500 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1 duration-200 flex-shrink-0">
+                  <IconChevronLeft style={{ transform: 'rotate(180deg)' }} />
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // === RESULT VIEW ===
+    const ResultView = ({ node, onOptionClick }) => {
+      let cardClasses = "";
+      let iconClasses = "";
+      switch (node.type) {
+        case "primary": cardClasses = "bg-blue-50 border-blue-200 text-blue-900"; iconClasses = "bg-blue-100 text-blue-600"; break;
+        case "warning": cardClasses = "bg-amber-50 border-amber-200 text-amber-900"; iconClasses = "bg-amber-100 text-amber-600"; break;
+        case "danger": cardClasses = "bg-red-50 border-red-200 text-red-900"; iconClasses = "bg-red-100 text-red-600"; break;
+        default: cardClasses = "bg-slate-50 border-slate-200 text-slate-900"; iconClasses = "bg-slate-200 text-slate-600";
+      }
+
+      return (
+        <div className="flex flex-col h-full animate-fade-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className={`p-3 rounded-full ${iconClasses}`}>
+              <IconClipboardList />
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold text-slate-800">{node.title}</h2>
+          </div>
+          <div className={`p-6 rounded-2xl border ${cardClasses} shadow-sm mb-4`}>
+            <p className="text-lg md:text-xl font-bold whitespace-pre-line leading-relaxed">{node.content}</p>
+            {node.extra && (
+              <p className="mt-4 text-sm md:text-base opacity-90 leading-relaxed border-t border-black/10 pt-4">{node.extra}</p>
+            )}
+          </div>
+
+          {node.notes && node.notes.length > 0 && (
+            <div className="pt-4 border-t border-slate-100 mb-4">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-slate-600 mb-3"><IconInfo /> 相關備註</h3>
+              <ul className="space-y-2">
+                {node.notes.map((noteKey, idx) => (
+                  <li key={idx} className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 whitespace-pre-line">
+                    {FOOTNOTES[noteKey]}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {node.nextSteps && node.nextSteps.length > 0 && (
+            <div className="mt-auto pt-4 border-t-2 border-brand-100">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-brand-700 mb-3">
+                <IconArrowRight /> 後續評估路徑
+              </h3>
+              <div className="flex flex-col gap-2">
+                {node.nextSteps.map((step, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => onOptionClick(step.next, step.label)}
+                    className="text-left w-full px-4 py-3 bg-brand-50 border border-brand-100 rounded-xl hover:bg-brand-100 hover:border-brand-500 transition-all duration-200 text-brand-700 font-medium text-sm flex justify-between items-center group"
+                  >
+                    <span>{step.label}</span>
+                    <span className="opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                      <IconArrowRight />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // === DRAWER ===
+    const Drawer = ({ isOpen, onClose, type }) => {
+      const data = type ? REF_DATA[type] : null;
+      useEffect(() => {
+        if (isOpen) { document.body.style.overflow = 'hidden'; }
+        else { document.body.style.overflow = 'auto'; }
+        return () => { document.body.style.overflow = 'auto'; };
+      }, [isOpen]);
+      if (!isOpen) return null;
+      return (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-brand-900/40 backdrop-blur-sm" onClick={onClose} style={{ animation: 'fadeIn 0.2s ease-out' }} />
+          <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col" style={{ animation: 'slideIn 0.3s ease-out' }}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+              <h3 className="text-xl font-bold text-brand-900 flex items-center gap-2"><IconClipboardList />{data?.title}</h3>
+              <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-200 text-slate-500 transition-colors"><IconX /></button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 drawer-scroll text-slate-700" dangerouslySetInnerHTML={{ __html: data?.content || '' }} />
+          </div>
+        </div>
+      );
+    };
+
+    // === REF MENU ===
+    const RefMenu = ({ onOpenRef }) => {
+      const [isOpen, setIsOpen] = useState(false);
+      return (
+        <div className="fixed bottom-6 right-6 z-30">
+          {isOpen && (
+            <div className="absolute bottom-20 right-0 bg-white rounded-2xl shadow-2xl border border-slate-200 p-5 w-80 animate-fade-in">
+              <h4 className="text-base font-bold text-brand-700 mb-4 border-b pb-2">參考資料</h4>
+              <div className="grid grid-cols-2 gap-2.5">
+                {REF_PANELS.map(p => (
+                  <button
+                    key={p.key}
+                    onClick={() => { onOpenRef(p.key); setIsOpen(false); }}
+                    className="text-sm font-medium text-slate-700 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 border border-slate-200 hover:border-brand-200 rounded-lg px-4 py-3 transition-colors text-left"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="w-16 h-16 bg-brand-700 text-white rounded-full shadow-lg hover:bg-brand-900 hover:scale-105 transition-all duration-200 flex items-center justify-center"
+            title="參考資料"
+          >
+            {isOpen ? <IconX /> : <IconBook />}
+          </button>
+        </div>
+      );
+    };
+
+    // === MAIN APP ===
+    const App = () => {
+      const [history, setHistory] = useState([{ id: 'root', label: '開始' }]);
+      const [drawerContent, setDrawerContent] = useState(null);
+
+      const currentStepId = history[history.length - 1].id;
+      const currentNode = DECISION_TREE[currentStepId];
+
+      const handleOptionClick = (nextStepId, label) => {
+        setHistory([...history, { id: nextStepId, label: label || nextStepId }]);
+      };
+
+      const handleBack = () => {
+        if (history.length > 1) setHistory(history.slice(0, -1));
+      };
+
+      const handleRestart = () => {
+        setHistory([{ id: 'root', label: '開始' }]);
+      };
+
+      const handleBreadcrumbJump = (index) => {
+        setHistory(history.slice(0, index + 1));
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col relative overflow-x-hidden">
+          <header className="glass-header text-white sticky top-0 z-20 shadow-md">
+            <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-brand-700 p-2 rounded-lg"><IconStethoscope /></div>
+                <div>
+                  <h1 className="text-lg md:text-xl font-bold leading-tight">臺北榮總食道癌多專科診療指引</h1>
+                  <p className="text-brand-100 text-xs md:text-sm">2025/12/30 修訂版</p>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <Breadcrumb history={history} onJump={handleBreadcrumbJump} />
+
+          <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-6 relative z-10 flex flex-col">
+            {history.length > 1 && (
+              <div className="flex justify-between items-center mb-4 animate-fade-in">
+                <button onClick={handleBack} className="flex items-center gap-1 text-slate-500 hover:text-brand-700 transition-colors font-medium text-sm bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-200 hover:border-brand-500 hover:bg-brand-50">
+                  <IconChevronLeft /> 返回上一步
+                </button>
+                <button onClick={handleRestart} className="flex items-center gap-1 text-slate-500 hover:text-red-600 transition-colors font-medium text-sm bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-200 hover:border-red-300 hover:bg-red-50">
+                  <IconRefresh /> 重新開始
+                </button>
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 animate-fade-in flex-1">
+              {currentNode.isResult ? (
+                <ResultView node={currentNode} onOptionClick={handleOptionClick} />
+              ) : (
+                <QuestionView node={currentNode} onOptionClick={handleOptionClick} />
+              )}
+            </div>
+
+            <p className="text-center text-xs text-slate-400 mt-6 pb-20">
+              * 若病情複雜或未列於指引選項內，請交由 Multidisciplinary Team (多專科團隊) 綜合評估。
+            </p>
+          </main>
+
+          <RefMenu onOpenRef={(type) => setDrawerContent(type)} />
+          <Drawer isOpen={drawerContent !== null} onClose={() => setDrawerContent(null)} type={drawerContent} />
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
