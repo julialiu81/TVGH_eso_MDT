@@ -37,8 +37,6 @@ window.ECG = window.ECG || {};
   };
 
   // ---------- tags ----------
-  const T_MDT_STAGE = () => tag("Stage I–IVA：多專科評估 (Multidisciplinary evaluation)", "mdt");            // s25
-  const T_MDT_RESECTABLE = () => tag("Potentially resectable：多專科討論 (Multidisciplinary review)", "mdt"); // s13
   const T_PREF_ESOPHAGECTOMY = () => tag("Esophagectomy", "preferred");                                       // s29
 
   // ---------- FOOTNOTES（v3 逐字；腺癌專用） ----------
@@ -75,7 +73,6 @@ window.ECG = window.ECG || {};
         { label: "cT4b", next: "res_adeno_ct4b", sub: "侵犯心臟、大血管、氣管等" },
         { label: "無法切除之局部晚期、局部復發或遠端轉移", next: "adeno_unresectable", sub: "Unresectable locally advanced, locally recurrent, or metastatic disease" }
       ],
-      tags: [T_MDT_STAGE()],
       refs: [R.TNM_C(), R.WORKUP(), R.SURG_RES()],
       source: [25, 26, 27, 28, 33]
     },
@@ -135,7 +132,7 @@ window.ECG = window.ECG || {};
       isResult: true, type: "primary", title: "建議治療方式",
       content: "圍手術期化療接續食道切除術 (Perioperative chemotherapy then esophagectomy, 首選)\n或 術前同步化放療 (Preoperative chemoradiation, RT 41.4-50.4 Gy + 併用化療)\n或 考慮新輔助/圍手術期免疫檢查點抑制劑 (若 MSI-H/dMMR)\n或 根除性同步化放療 (Definitive chemoradiation, 針對拒絕手術者)",
       notes: ["adeno_a", "note_feeding"],
-      tags: [T_MDT_RESECTABLE(), tag("Perioperative chemotherapy then esophagectomy", "preferred")],   // s13, s27
+      tags: [tag("Perioperative chemotherapy then esophagectomy", "preferred")],   // s13, s27
       refs: [R.CT_PERIOP(), R.CT_NEO(), R.CT_DEF(), R.RT_PREOP(), R.RT_DEF(), R.TRIALS()],
       nextSteps: [
         { label: "術前治療後 → 反應評估", next: "adeno_response_preop" },

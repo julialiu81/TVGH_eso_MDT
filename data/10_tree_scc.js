@@ -40,8 +40,6 @@ window.ECG = window.ECG || {};
   };
 
   // ---------- tags ----------
-  const T_MDT_STAGE = () => tag("Stage I–IVA：多專科評估 (Multidisciplinary evaluation)", "mdt");            // s15
-  const T_MDT_RESECTABLE = () => tag("Potentially resectable：多專科討論 (Multidisciplinary review)", "mdt"); // s13
 
   // ---------- FOOTNOTES（v3 逐字；SCC 用 + 共用） ----------
   Object.assign(ECG.FOOTNOTES, {
@@ -99,7 +97,6 @@ window.ECG = window.ECG || {};
         { label: "cT4b", next: "res_scc_ct4b", sub: "侵犯心臟、大血管、氣管等" },
         { label: "無法切除之局部晚期、局部復發或遠端轉移", next: "scc_unresectable", sub: "Unresectable locally advanced, locally recurrent, or metastatic disease" }
       ],
-      tags: [T_MDT_STAGE()],
       refs: [R.TNM_C(), R.WORKUP(), R.SURG_RES()],
       source: [15, 16, 18, 23]
     },
@@ -237,7 +234,6 @@ window.ECG = window.ECG || {};
       isResult: true, type: "primary", title: "建議治療方式",
       content: "術前化療 (Preoperative chemotherapy, DCF)\n或 術前同步化放療 (Preoperative chemoradiation, RT 41.4-50.4 Gy + 併用化療)\n或 根除性同步化放療 (Definitive chemoradiation, RT 50.4-60 Gy + 併用化療)",
       notes: ["scc_a", "note_feeding"],
-      tags: [T_MDT_RESECTABLE()],
       refs: [R.CT_NEO(), R.CT_DEF(), R.RT_PREOP(), R.RT_DEF(), R.SURG_RES(), R.TRIALS()],
       nextSteps: [
         { label: "術前化療/化放療後 → 反應評估", next: "scc_response_preop" },
