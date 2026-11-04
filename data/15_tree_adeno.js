@@ -307,16 +307,16 @@ window.ECG = window.ECG || {};
       source: [30]
     },
     res_adeno_surg_np_r0_t1: {
-      isResult: true, type: "primary", title: "R0 Node(-) pTis/pT1 術後處置",
-      content: "追蹤觀察 (Surveillance)\n或 考慮同步化放療 (Consider chemoradiation for select patients)",
-      refs: [R.RT_POSTOP(), R.FOLLOWUP()],
+      isResult: true, type: "neutral", title: "R0 Node(-) pTis/pT1 術後處置",
+      content: "追蹤觀察 (Surveillance)",
+      refs: [R.FOLLOWUP()],
       nextSteps: [{ label: "若日後復發 → 復發處置", next: "adeno_recurrence" }],
       source: [30]
     },
     res_adeno_surg_np_r0_t2: {
-      isResult: true, type: "neutral", title: "R0 Node(-) pT2 術後處置",
-      content: "追蹤觀察 (Surveillance)",
-      refs: [R.FOLLOWUP()],
+      isResult: true, type: "primary", title: "R0 Node(-) pT2 術後處置",
+      content: "追蹤觀察 (Surveillance)\n或 考慮同步化放療 (Consider chemoradiation for select patients)",
+      refs: [R.RT_POSTOP(), R.FOLLOWUP()],
       nextSteps: [{ label: "若日後復發 → 復發處置", next: "adeno_recurrence" }],
       source: [30]
     },
@@ -358,17 +358,16 @@ window.ECG = window.ECG || {};
     },
     res_adeno_surg_p_pcr: {
       isResult: true, type: "primary", title: "R0 ypT0N0 術後處置",
-      content: "全身性治療 (Systemic therapy) — 若曾接受圍手術期治療\n或 Nivolumab — 若曾接受術前化放療\n或 同步化放療 (Chemoradiation)\n或 觀察至疾病進展 (Observation)",
-      notes: ["nivo_adj"],
-      refs: [R.CT_PERIOP(), R.CT_EGJ_ADJ(), R.RT_POSTOP()],
+      content: "觀察至疾病進展 (Observation until progression)\n或 全身性治療 (Systemic therapy) — 若曾接受圍手術期治療 (if received perioperatively)",
+      refs: [R.CT_PERIOP(), R.FOLLOWUP()],
       nextSteps: [{ label: "若日後復發 → 復發處置", next: "adeno_recurrence" }],
       source: [31]
     },
     res_adeno_surg_p_residual: {
       isResult: true, type: "warning", title: "R0 ypT+/N+ 術後處置",
-      content: "全身性治療 (Systemic therapy) — 若曾接受圍手術期治療\n或 Nivolumab — 若曾接受術前治療\n或 同步化放療 (Chemoradiation)\n或 觀察至疾病進展",
+      content: "全身性治療 (Systemic therapy) — 若曾接受圍手術期治療 (if received perioperatively)\n或 Nivolumab — 若曾接受術前化放療 (if received preoperative chemoradiation)\n或 觀察至疾病進展 (Observation until progression)",
       notes: ["nivo_adj"],
-      refs: [R.CT_PERIOP(), R.CT_EGJ_ADJ(), R.RT_POSTOP(), R.TRIALS()],
+      refs: [R.CT_PERIOP(), R.CT_EGJ_ADJ(), R.TRIALS()],
       source: [31]
     },
     res_adeno_surg_p_r1: {

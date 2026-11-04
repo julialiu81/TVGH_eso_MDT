@@ -429,8 +429,8 @@ window.ECG = window.ECG || {};
     },
     res_scc_surg_p_r1: {
       isResult: true, type: "warning", title: "R1 術後處置",
-      content: "輔助治療 (Adjuvant treatment)\n或 追蹤觀察 (Surveillance)",
-      refs: [R.CT_ADJ(), R.RT_POSTOP(), R.FOLLOWUP()],
+      content: "觀察至疾病進展 (Observation until progression)\n或 緩和處置 (Palliative Management)",
+      refs: [R.CT_PAL(), R.FOLLOWUP()],
       source: [21]
     },
     res_scc_surg_p_r2: {
