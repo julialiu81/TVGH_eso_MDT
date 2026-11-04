@@ -1067,6 +1067,7 @@
             </div>
           </section>
 
+          {USED_TAG_LEVELS.length >= 3 && (
           <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
             <div className="flex items-center gap-2 text-brand-700 mb-3"><IconTag size={18} /><h3 className="font-bold">標籤說明</h3></div>
             <div className="flex flex-wrap gap-2">
@@ -1076,6 +1077,7 @@
               <p className="mt-3 text-xs text-slate-500">標籤對應指引原文的分類：{USED_TAG_LEVELS.filter(k => TAG_SOURCE_TERMS[k]).map(k => TAG_SOURCE_TERMS[k] + ' → ' + TAG_LEVELS[k]).join('、')}。</p>
             )}
           </section>
+          )}
 
           {INTEGRITY.total > 0 && (
             <details className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
