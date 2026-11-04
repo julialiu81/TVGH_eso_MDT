@@ -1,0 +1,11 @@
+_dev/
+dist/
+*.pptx
+.gitignore
+.assetsignore
+wrangler.jsonc
+validate.js
+build_single.py
+SPEC.md
+README.md
+_old/

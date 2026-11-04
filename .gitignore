@@ -1,0 +1,9 @@
+# dev / build artefacts (not needed for the site)
+*.pptx
+*.pyc
+.DS_Store
+Thumbs.db
+__pycache__/
+_dev/
+_old/
+dist/
