@@ -40,7 +40,7 @@ data 檔為純 JS（無 JSX），整檔包在 `(function () { const ECG = window
 
 ### 2.1 必備入口節點（validate.js REQUIRED_NODES）
 `root`, `scc_stage`, `scc_unresectable`, `scc_post_er`, `scc_response_preop`, `scc_response_def`, `scc_surgical_type`, `scc_recurrence`, `adeno_stage`, `adeno_unresectable`, `adeno_response_preop`, `adeno_response_def`, `adeno_surgical_type`, `adeno_recurrence`。
-`root` 選項：`scc_stage`、`adeno_stage`（同 v3）。另在 `root` 之下**新增**兩個快捷選項（label 自訂，`sub` 說明）：「SCC 後續評估（治療反應 / 手術結果 / 復發）」→ 新問題節點 `scc_followup_entry`（選項連到 `scc_post_er`、`scc_response_preop`、`scc_response_def`、`scc_surgical_type`、`scc_recurrence`）；腺癌同理 `adeno_followup_entry`。這兩個 id 也列入 REQUIRED_NODES。
+`root` 選項：`scc_stage`、`adeno_stage`（同 v3）。另在 `root` 之下**新增**兩個快捷選項（label 自訂，`sub` 說明）：「SCC 後續評估（治療反應 / 手術結果 / 復發）」→ 新問題節點 `scc_followup_entry`（選項連到 `scc_post_er`、`scc_response_preop`、`scc_response_def`、`scc_surgical_type`、`scc_recurrence`）；腺癌同理 `adeno_followup_entry`。這兩個 id 也列入 REQUIRED_NODES。這兩個 root 選項加 `shortcut: true`：UI 把它們放在分隔線後、以「直接查詢（捷徑）」淡化樣式顯示，標題格式「直接查詢：鱗狀細胞癌 治療後評估 (SCC post-treatment assessment)」。
 
 ### 2.2 面板 key、分組、必要錨點（Agent R）
 

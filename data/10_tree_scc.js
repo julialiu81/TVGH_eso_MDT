@@ -66,8 +66,8 @@ window.ECG = window.ECG || {};
       options: [
         { label: "鱗狀細胞癌 (Squamous cell carcinoma)", next: "scc_stage", sub: "初始治療：依臨床分期與腫瘤狀態選擇" },
         { label: "腺癌 (Adenocarcinoma)", next: "adeno_stage", sub: "初始治療：依臨床分期與腫瘤狀態選擇" },
-        { label: "鱗狀細胞癌 後續評估 (SCC follow-up assessment)", next: "scc_followup_entry", sub: "內視鏡切除後病理 / 治療反應評估 / 手術結果 / 復發" },
-        { label: "腺癌 後續評估 (Adenocarcinoma follow-up assessment)", next: "adeno_followup_entry", sub: "治療反應評估 / 手術結果 / 復發 / Biomarker 導向全身治療" }
+        { label: "直接查詢：鱗狀細胞癌 治療後評估 (SCC post-treatment assessment)", next: "scc_followup_entry", shortcut: true, sub: "內視鏡切除後病理 / 治療反應評估 / 手術結果 / 復發" },
+        { label: "直接查詢：腺癌 治療後評估 (Adenocarcinoma post-treatment assessment)", next: "adeno_followup_entry", shortcut: true, sub: "治療反應評估 / 手術結果 / 復發 / Biomarker 導向全身治療" }
       ],
       refs: [R.WORKUP(), R.TNM()],
       source: [14, 24]
@@ -75,7 +75,7 @@ window.ECG = window.ECG || {};
 
     // ============ SCC — FOLLOW-UP QUICK ENTRY（v4 新增，SPEC §2.1） ============
     scc_followup_entry: {
-      question: "鱗狀細胞癌 後續評估：請選擇目前情境",
+      question: "鱗狀細胞癌 治療後評估：請選擇目前情境",
       options: [
         { label: "內視鏡切除後病理評估 (Post-ER pathology)", next: "scc_post_er", sub: "EMR / ESD 後依病理結果決定追蹤或追加治療" },
         { label: "術前化療 / 化放療後反應評估", next: "scc_response_preop", sub: "Response assessment after preoperative treatment" },

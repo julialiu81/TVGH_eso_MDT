@@ -52,7 +52,7 @@ window.ECG = window.ECG || {};
 
     // ============ ADENOCARCINOMA — FOLLOW-UP QUICK ENTRY（v4 新增，SPEC §2.1） ============
     adeno_followup_entry: {
-      question: "腺癌 後續評估：請選擇目前情境",
+      question: "腺癌 治療後評估：請選擇目前情境",
       options: [
         { label: "術前治療後反應評估", next: "adeno_response_preop", sub: "Response assessment after preoperative treatment" },
         { label: "根除性化放療後反應評估", next: "adeno_response_def", sub: "Response assessment after definitive CRT" },

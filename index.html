@@ -853,16 +853,20 @@
           <div className="flex flex-col gap-2.5">
             {opts.map((opt, i) => {
               const missing = !TREE[opt.next];
+              const firstShortcut = opt.shortcut && !opts.slice(0, i).some(o => o && o.shortcut);
               return (
-                <button key={i} onClick={() => go(opt.next)}
-                  className="text-left w-full px-4 sm:px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-brand-50 hover:border-brand-100 hover:shadow-sm active:scale-[.99] transition-all duration-200 text-slate-800 flex justify-between items-center gap-3 group min-h-[54px]">
+                <React.Fragment key={i}>
+                {firstShortcut && <div className="mt-2 pt-3 border-t border-dashed border-slate-200 text-xs font-semibold tracking-wider uppercase text-slate-400">直接查詢（捷徑）</div>}
+                <button onClick={() => go(opt.next)}
+                  className={(opt.shortcut ? "text-left w-full px-4 py-3 bg-white border border-dashed border-slate-300 rounded-xl" : "text-left w-full px-4 sm:px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl") +  " hover:bg-brand-50 hover:border-brand-100 hover:shadow-sm active:scale-[.99] transition-all duration-200 text-slate-800 flex justify-between items-center gap-3 group min-h-[54px]"}>
                   <span className="min-w-0 flex-1">
-                    <span className="block font-medium text-[15px] sm:text-lg leading-snug whitespace-pre-line">{opt.label}</span>
+                    <span className={"block leading-snug whitespace-pre-line " + (opt.shortcut ? "font-medium text-sm sm:text-base text-slate-700" : "font-medium text-[15px] sm:text-lg")}>{opt.label}</span>
                     {opt.sub && <span className="block text-xs sm:text-sm text-slate-500 mt-1 whitespace-pre-line">{opt.sub}</span>}
                     {missing && <span className="block text-xs text-red-600 mt-1">⚠ 目標節點不存在：{opt.next}</span>}
                   </span>
                   <span className="text-brand-500 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition flex-shrink-0"><IconChevronRight size={20} /></span>
                 </button>
+                </React.Fragment>
               );
             })}
             {!opts.length && <Notice tone="red">此節點沒有任何選項（資料不完整）。</Notice>}
@@ -974,7 +978,7 @@
               <>
                 <p className="text-sm text-slate-500 mb-4">{root.question}</p>
                 <div className="flex flex-col gap-2.5">
-                  {(root.options || []).map((o, i) => (
+                  {(root.options || []).filter(o => !o.shortcut).map((o, i) => (
                     <button key={i} onClick={() => navigate(treeHash('path', ['root', o.next]))}
                       className="text-left w-full px-4 sm:px-5 py-4 rounded-xl border border-brand-100 bg-gradient-to-r from-brand-50 to-white hover:from-sky-50 hover:border-accent-500 hover:shadow-sm active:scale-[.99] transition flex items-center gap-3 group min-h-[60px]">
                       <span className="w-8 h-8 rounded-full bg-brand-700 text-white text-sm font-bold flex items-center justify-center flex-shrink-0 group-hover:bg-accent-600 transition-colors">{i + 1}</span>
@@ -987,6 +991,26 @@
                     </button>
                   ))}
                 </div>
+                {(root.options || []).some(o => o.shortcut) && (
+                  <div className="mt-5 pt-4 border-t border-dashed border-slate-200">
+                    <p className="text-xs font-semibold tracking-wider uppercase text-slate-400 mb-2">直接查詢（捷徑）</p>
+                    <p className="text-xs text-slate-500 mb-3">病人已完成初始治療時，可直接跳到治療後評估；內容與上方流程走到的節點相同。</p>
+                    <div className="flex flex-col gap-2">
+                      {(root.options || []).filter(o => o.shortcut).map((o, i) => (
+                        <button key={'s' + i} onClick={() => navigate(treeHash('path', ['root', o.next]))}
+                          className="text-left w-full px-4 py-3 rounded-xl border border-dashed border-slate-300 bg-white hover:bg-slate-50 hover:border-brand-300 active:scale-[.99] transition flex items-center gap-3 group min-h-[48px]">
+                          <span className="text-slate-400 group-hover:text-brand-600 flex-shrink-0"><IconSearch size={16} /></span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-medium text-slate-700 text-sm sm:text-base leading-snug">{o.label}</span>
+                            {o.sub && <span className="block text-xs text-slate-500 mt-0.5">{o.sub}</span>}
+                            {!TREE[o.next] && <span className="block text-xs text-red-600 mt-0.5">⚠ 節點 {o.next} 尚未建立</span>}
+                          </span>
+                          <span className="text-slate-400 flex-shrink-0"><IconChevronRight size={18} /></span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <Notice tone="red">決策樹資料尚未載入（找不到 <code>root</code> 節點）。請確認 <code>data/10_tree_scc.js</code>、<code>data/15_tree_adeno.js</code> 已存在並可正常載入。</Notice>
