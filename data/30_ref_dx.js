@@ -298,17 +298,17 @@ window.ECG = window.ECG || {};
 
   const SCHEMES = [
     makeScheme({
-      key: 'scc_c', label: 'SCC 臨床分期 (cTNM)', source: [36, 37, 39],
+      key: 'scc_c', label: '鱗狀細胞癌 臨床分期 (cTNM)', source: [36, 37, 39],
       axes: [AX.cT_scc, AX.cN, AX.M], rows: SCC_C,
       entry: function (stage) { return stage === 'IVB' ? E.scc_unres : E.scc_stage; }
     }),
     makeScheme({
-      key: 'scc_p', label: 'SCC 病理分期 (pTNM)', source: [36, 37, 38, 39],
+      key: 'scc_p', label: '鱗狀細胞癌 病理分期 (pTNM)', source: [36, 37, 38, 39],
       axes: [AX.pT, AX.pN, AX.M, AX.G, AX.L], rows: SCC_P,
       entry: function (stage) { return stage === 'IVB' ? [E.scc_surg_p, E.scc_unres] : E.scc_surg_p; }
     }),
     makeScheme({
-      key: 'scc_yp', label: 'SCC 術前治療後病理分期 (ypTNM)', source: [36, 37, 39],
+      key: 'scc_yp', label: '鱗狀細胞癌 術前治療後病理分期 (ypTNM)', source: [36, 37, 39],
       axes: [AX.ypT, AX.ypN, AX.M], rows: YP_ROWS,
       entry: function (stage) { return stage === 'IVB' ? [E.scc_surg_yp, E.scc_unres] : E.scc_surg_yp; }
     }),
@@ -464,7 +464,7 @@ window.ECG = window.ECG || {};
       title: 'TNM 分期 (AJCC 8th Ed.)',
       source: [35, 36, 37, 38, 39, 40],
       content: `
-<p class="ref-note">AJCC Cancer Staging Manual, Eighth edition (2018-)（投影片 s35–40）。T、N、M、G 定義 SCC 與腺癌相同；Location 只用於 SCC 病理分期。下方六張分期表逐列照投影片 s39（SCC）、s40（腺癌）；<a href="#/stage">分期計算器</a> 使用同一份表格。</p>
+<p class="ref-note">AJCC Cancer Staging Manual, Eighth edition (2018-)（投影片 s35–40）。T、N、M、G 定義鱗狀細胞癌與腺癌相同；Location 只用於 SCC 病理分期。下方六張分期表逐列照投影片 s39（SCC）、s40（腺癌）；<a href="#/stage">分期計算器</a> 使用同一份表格。</p>
 
 <h4 class="ref-h4" id="TNM-t">Primary Tumor (T)</h4>
 <ul>
