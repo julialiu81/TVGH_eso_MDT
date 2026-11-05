@@ -170,3 +170,8 @@ python _dev/make_mock.py     # 修改 index.html 後重新產生 mock 頁面
 python _dev/ui_test.py       # mock：首頁、路徑、搜尋、錨點、多系統分期計算器（含 STAGE_TABLE = null、舊格式、錯誤資料）（390px / 1280px）
 python _dev/real_test.py     # 真實資料：逐一開啟所有節點、面板、refs 錨點、SPEC 必要錨點，並走過每個分期系統的每個 stage
 ```
+
+
+## 快取版本參數
+
+`index.html` 載入 `data/*.js` 時帶有 `?v=YYYYMMDDx`。每次修改 data 內容後請同步更新這個參數，否則 GitHub Pages 的 10 分鐘快取會讓使用者看到舊內容。

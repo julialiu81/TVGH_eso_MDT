@@ -24,7 +24,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "index.html"
 DEFAULT_OUT = ROOT / "dist" / "eso_guidelines_single.html"
 
-SCRIPT_RE = re.compile(r'<script\s+src="(data/[^"]+?\.js)"\s*>\s*</script>', re.I)
+SCRIPT_RE = re.compile(r'<script\s+src="(data/[^"?]+?\.js)(?:\?[^"]*)?"\s*>\s*</script>', re.I)
 DATA_END = "<!-- DATA:END -->"
 
 
